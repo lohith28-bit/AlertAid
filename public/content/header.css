@@ -1,0 +1,14 @@
+h1{
+	color: yellow;
+}
+body{
+	
+	min-height: 100px;
+}
+.header{
+	background-color: black;
+	min-height: 100px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

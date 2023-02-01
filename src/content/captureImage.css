@@ -1,0 +1,15 @@
+.Capture {
+	margin: 20px;
+	display: block;
+	justify-content: center;
+	align-items: center;
+}
+
+button {
+	padding: auto;
+	margin: 20px;
+}
+
+button {
+	font-weight: bold;
+}

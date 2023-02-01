@@ -1,63 +1,75 @@
 
-import React, { useState, useRef } from "react";
+import React, { useRef, useState } from 'react';
 import "./captureImage.css";
 
 
-const CaptureImage = () => {
-	const videoRef = useRef(null);
-	const [imgSrc, setImgSrc] = useState(null);
-	const[sendBtn,setSndBtn] = useState(false);
-	const [hasCameraAccess, setHasCameraAccess] = useState(false);
 
-	const handleStart = () => {
-		setHasCameraAccess(true);
 
-		navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-			.then(stream => {
-				videoRef.current.srcObject = stream;
-				videoRef.current.play();
-			});
-	};
 
-	const handleCapture = () => {
-		const canvas = document.createElement("canvas");
-		canvas.width = videoRef.current.videoWidth;
-		canvas.height = videoRef.current.videoHeight;
-		canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
-		setImgSrc(canvas.toDataURL("image/jpeg"));
+function CaptureImage() {
+	const [image, setImage] = useState(null);
+	const fileInputRef = useRef(null);
+	//
+	const [sendBtn,setSndBtn] = useState(false);
+	// const [imgSrc, setImgSrc] = useState(null);
+
+	const handleFileSelect = async e => {
+		const file = e.target.files[0];
+
+		const imageUrl = URL.createObjectURL(file);
+		const image = new Image();
+		image.src = imageUrl;
+
+		await new Promise((resolve, reject) => {
+			image.onload = resolve;
+			image.onerror = reject;
+		});
+
+		const canvas = document.createElement('canvas');
+		const maxSize = 500;
+		let { width, height } = image;
+		if (width > height) {
+			if (width > maxSize) {
+				height *= maxSize / width;
+				width = maxSize;
+			}
+		} else {
+			if (height > maxSize) {
+				width *= maxSize / height;
+				height = maxSize;
+			}
+		}
+		canvas.width = width;
+		canvas.height = height;
+
+		const ctx = canvas.getContext('2d');
+		ctx.drawImage(image, 0, 0, width, height);
+
+		const resizedImageUrl = canvas.toDataURL('image/jpeg');
+		setImage(resizedImageUrl);
 		setSndBtn(true);
 	};
-
-	const Sendpic =() =>{
+	const sendpic= () =>{
 		setSndBtn(false);
-		setImgSrc(false)
+		setImage(false)
 	}
 	return (
-		<div className="Capture">
-			<video
-				ref={videoRef}
-				style={{ width: "100%", height: "300px" }}
+		<div>
+			<input
+				type="file"
+				accept="image/*"
+				capture="environment"
+				ref={fileInputRef}
+				onChange={handleFileSelect}
+				style={{ display: 'none' }}
 			/>
-			{/* <br /> */}
-			<div>
-				{!hasCameraAccess ? (
-					<button className="btn btn-info"  onClick={handleStart}>Allow camera to capture</button>
-				) : (
-						<button className="btn btn-danger" onClick={handleCapture}>Capture</button>
-				)}
-			</div>
-			<div>
-			{imgSrc && (
-				<img
-					src={imgSrc}
-					
-				/>
-			)}
-				{sendBtn && (<button className="btn btn-info" onClick={Sendpic}>Send</button>)}
-			</div>
+			<button className='btn btn-danger' onClick={() => fileInputRef.current.click()}>
+				Capture
+			</button>
+			{image && <img src={image} alt="captured" height={300} width={300} />}
+			{sendBtn && (<button className="btn btn-info" onClick={sendpic}>Send</button>)}
 		</div>
 	);
-};
-
+}
 
 export default CaptureImage;

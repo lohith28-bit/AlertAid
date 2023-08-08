@@ -1,52 +1,54 @@
 import React, { useRef, useState } from 'react';
 import "./captureImage.css";
 
-function CaptureImage() {
+function CaptureImage(props) {
 	const [image, setImage] = useState(null);
 	const fileInputRef = useRef(null);
-	//
 	const [sendBtn, setSndBtn] = useState(false);
+	const [response, setResponse] = useState(null);
 
 	const handleFileSelect = async e => {
 		const file = e.target.files[0];
-
 		const imageUrl = URL.createObjectURL(file);
-		const image = new Image();
-		image.src = imageUrl;
-
-		await new Promise((resolve, reject) => {
-			image.onload = resolve;
-			image.onerror = reject;
-		});
-
-		const canvas = document.createElement('canvas');
-		const maxSize = 500;
-		let { width, height } = image;
-		if (width > height) {
-			if (width > maxSize) {
-				height *= maxSize / width;
-				width = maxSize;
-			}
-		} else {
-			if (height > maxSize) {
-				width *= maxSize / height;
-				height = maxSize;
-			}
-		}
-		canvas.width = width;
-		canvas.height = height;
-
-		const ctx = canvas.getContext('2d');
-		ctx.drawImage(image, 0, 0, width, height);
-
-		const resizedImageUrl = canvas.toDataURL('image/jpeg');
-		setImage(resizedImageUrl);
+		setImage(imageUrl);
 		setSndBtn(true);
+		setResponse(null); // Reset the response state
 	};
-	const sendpic = () => {
+
+	const sendpic = async () => {
+		// console.log(props.PIN);
+
+		const formData = new FormData();
+		formData.append('image', fileInputRef.current.files[0]);
+		await fetch('/upload-image', {
+			method: 'POST',
+			body: formData
+		})
+		// .then(
+		// 	res => res.json()).then(
+		// 		data2 => {
+		// 			// console.log(data2);
+		// 			// setResponse(data1);
+		// 		}
+		// 	)
+		fetch(`/send_sms/${props.Full_address}`)
+			.then(
+				res => res.json()).then(
+					data3 => {
+						console.log(data3);
+					}
+				)
+		await fetch(`/Automate_Police_Hospital/${props.PIN}`).then(
+			res => res.json()).then(
+				data1 => {
+					console.log(data1);
+					setResponse(data1);
+				}
+			)
 		setSndBtn(false);
-		setImage(false)
-	}
+		setImage(null);
+	};
+
 	return (
 		<div>
 			<input
@@ -61,9 +63,11 @@ function CaptureImage() {
 				Capture
 			</button>
 			{image && <img src={image} alt="captured" height={300} width={300} />}
-			{sendBtn && (<button className="btn btn-info" onClick={sendpic}>Send</button>)}
+			{sendBtn && <button className="btn btn-info" onClick={sendpic}>Send</button>}
+			{response && <div className="response"><b>We have alerted the nearby hospital and police station through their numbers {JSON.stringify(response.Hospital_Contact_no)} and {JSON.stringify(response.Police_Contact_no)}</b></div>}
 		</div>
 	);
 }
 
 export default CaptureImage;
+

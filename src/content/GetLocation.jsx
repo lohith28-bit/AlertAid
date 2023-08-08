@@ -1,30 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React from "react";
+import { useGeolocated } from "react-geolocated";
 import GetPlace from "./GetPlace"
-function GetLocation() {
-	const [location, setLocation] = useState({});
-	
-	useEffect(() => {
-		if (navigator.geolocation) {
-			navigator.geolocation.getCurrentPosition(
-				position => {
-					setLocation({
-						latitude: position.coords.latitude,
-						longitude: position.coords.longitude
-					});
-				},
-				error => console.error(error)
-			);
-		} else {
-			console.error("Geolocation is not supported by this browser.");
-		}
-	}, []);
 
-	return (
-		<div>
-			<GetPlace lat={location.latitude} log={location.longitude}/>
-
-		</div>
+const GetLocation = () => {
+	const { coords, isGeolocationAvailable, isGeolocationEnabled } =
+		useGeolocated({
+			positionOptions: {
+				enableHighAccuracy: false,
+			},
+			userDecisionTimeout: 5000,
+		});
+	return !isGeolocationAvailable ? (
+		<div>Your browser does not support Geolocation</div>
+	) : !isGeolocationEnabled ? (
+		<div>Geolocation is not enabled</div>
+	) : coords ? (
+		<GetPlace lat={coords.latitude} log={coords.longitude} />
+	) : (
+		<div>Getting the location data&hellip; </div>
 	);
-}
+};
 
 export default GetLocation;
+
+
+
+
+
